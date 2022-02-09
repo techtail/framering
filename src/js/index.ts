@@ -39,4 +39,12 @@ $(() => {
             $items.append($item);
         });
     });
+
+    // When clicking to delete a repeater item
+    $(document.body).on("click", ".repeater-item button.button-delete-item", function(e) {
+        e.preventDefault();
+
+        const $item = $(e.target).parents(".repeater-item:first");
+        $item.remove();
+    });
 });

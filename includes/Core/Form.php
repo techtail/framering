@@ -1025,7 +1025,7 @@ final class Form {
         // Check if the form has an ID and the field has a name
         if ($this->id !== null && isset($field["name"])) {
             // Add the form ID to the field
-            $new_name = $this->id . "[" . $field["name"];
+            $new_name = "framering[" . $this->id . "][" . $field["name"];
 
             // Check if is opening any tag inside the name
             if (strpos($field["name"], "[") > -1) {
@@ -1161,6 +1161,12 @@ final class Form {
         return $this->optional_indicators;
     }
 
+    public function render() {
+        return self::render_fields($this->fields, [
+            "data" => $this->data
+        ]);
+    }
+
     /**
      * Render fields for a form
      *
@@ -1168,49 +1174,63 @@ final class Form {
      * @param string $layout The form layout (normal, bootstrap or table)
      * @return void
      */
-    static function render_fields($fields, $options = []) {
+    public static function render_fields($fields, $options = []) {
         $options = array_merge([
             "labels" => true,
             "return" => false,
-            "optional_indicators" => true
+            "optional_indicators" => true,
+            "prefix" => "",
+            "suffix" => ""
         ], $options);
 
-        $result = "<table class=\"form-table\" role=\"presentation\">";
-            // Iterate over all fields
-            foreach($fields as $field) {
-                // Set the field ID to the field name
-                $field["id"] = $field["name"];
+        $result = "";
 
-                // Check if it's a nonce field
-                if ($field["type"] === "nonce") {
-                    // Display it and continue
-                    $result .= $field["content"];
-                    continue;
+        // Iterate over all fields
+        foreach($fields as $field) {
+            if (!empty($options["prefix"])) {
+                $field["name"] = $options["prefix"] . $field["name"];
+            }
+
+            if (!empty($options["suffix"])) {
+                $field["name"] .= $options["suffix"];
+            }
+
+            // Set the field ID to the field name
+            $field["id"] = $field["name"];
+            $name = $field["name"];
+
+            // Check if it's a nonce field
+            if ($field["type"] === "nonce") {
+                // Display it and continue
+                $result .= $field["content"];
+                continue;
+            }
+
+            // Set the field value if any
+            if (isset($options["data"][$name])) {
+                $field["value"] = $options["data"][$name];
+            }
+        
+            $result .= "<div class=\"framering-form-group\">";
+                if ($options["labels"] && isset($field["title"])) {
+                    $result .= "<label for=\"" . $field["name"] . "\">" . esc_html($field["title"]) . "</label>";
                 }
 
-                $result .= "<tr>";
-                    if ($options["labels"] && isset($field["title"])) {
-                        $result .= "<th>";
-                            $result .= "<label for=\"" . $field["name"] . "\">" . esc_html($field["title"]) . "</label>";
-                        $result .= "</th>";
+                $result .= "<div class=\"framering-input\">";
+                    // Render it
+                    $field["return"] = true;
+                    $result .= self::render_field($field);
+
+                    // Check if the field has a description
+                    if (isset($field["description"])) {
+                        // Display it
+                        $result .= "<p class=\"description\">";
+                            $result .= nl2br($field["description"]);
+                        $result .= "</p>";
                     }
-
-                    $result .= "<td>";
-                        // Render it
-                        $field["return"] = true;
-                        $result .= self::render_field($field);
-
-                        // Check if the field has a description
-                        if (isset($field["description"])) {
-                            // Display it
-                            $result .= "<p class=\"description\">";
-                                $result .= nl2br($field["description"]);
-                            $result .= "</p>";
-                        }
-                    $result .= "</td>";
-                $result .= "</tr>";
-            }
-        $result .= "</table>";
+                $result .= "</div>";
+            $result .= "</div>";
+        }
 
         if ($options["return"]) {
             return $result;

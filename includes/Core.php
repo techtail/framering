@@ -7,6 +7,8 @@
 
 namespace Framering;
 
+use Framering\Core\Hooks;
+
 final class Core {
     /**
      * The core cache, used to cache objects
@@ -47,23 +49,39 @@ final class Core {
     }
 
     /**
+     * The WP hook manager instance
+     *
+     * @var Hooks
+     */
+    public $hooks;
+
+    /**
      * Initializes the Framering framework
      * Called upon WordPress initialization
      */
     public function init() {
+        $this->hooks = new Hooks($this);
+
         // Register the default plugin fields
         foreach(self::$default_fields as $field_class) {
             $this->register_field("\\Framering\\Core\\Fields\\" . $field_class);
         }
 
         // Hook the WP actions
-        \add_action("init", [$this, "wp_init"]);
+        \add_action("init", [$this->hooks, "wp_init"]);
+        \add_action("admin_init", [$this->hooks, "admin_init"]);
 
         // Hook the admin actions
-        \add_action("admin_menu", [$this, "admin_menu_init"]);
+        \add_action("admin_menu", [$this->hooks, "admin_menu_init"]);
 
         // Hook the metabox register
-        \add_action("add_meta_boxes", [$this, "register_metaboxes"]);
+        \add_action("add_meta_boxes", [$this->hooks, "register_metaboxes"]);
+
+        // Filters the pre-saving post action
+        \add_filter("wp_insert_post_data", [$this->hooks, "insert_post_data"], 10, 1);
+
+        // Hook the post saving action
+        \add_action("save_post", [$this->hooks, "save_post"], 10, 2);
     }
 
     /**
@@ -112,59 +130,5 @@ final class Core {
      */
     public function register_component($component) {
         self::$components[] = $component;
-    }
-
-    /**
-     * Called when WordPress is initialized
-     *
-     * @return void
-     */
-    public function wp_init() {
-        // Allow other plugins to initialize
-        \do_action("framering/init", $this);
-    }
-
-    /**
-     * Called when the WordPress menu is initialized
-     *
-     * @return void
-     */
-    public function admin_menu_init() {
-        $action = \add_submenu_page("tools.php", \esc_html__("Framering", "framering"), \esc_html__("Framering", "framering"), "manage_options", "framering-tools", ["\\Framering\\Views\\Admin\\DebugTools", "render"]);
-        
-        \wp_enqueue_script("framering-admin", \plugins_url("framering/dist/index.js", "framering"), ["jquery"], false);
-        
-        \add_action("load-" . $action, function() {
-            \add_filter("admin_body_class", fn($class) => $class .= " is-framering-headed-content", 10, 1);
-        });
-    }
-
-    /**
-     * Called when WordPress is registering the metaboxes
-     *
-     * @return void
-     */
-    public function register_metaboxes() {
-        // Iterate over all components
-        foreach(self::$components as $component) {
-            // If the component rules matches
-            if ($component->check()) {
-                $context = "advanced";
-
-                switch($component->style->position) {
-                    case "normal":
-                        $context = "advanced";
-                    break;
-
-                    case "lateral":
-                        $context = "side";
-                    break;
-                }
-                
-                \add_meta_box($component->id, $component->title, function() use ($component) {
-                    return Core\Form::render_fields($component->get_fields());
-                }, null, $context);
-            }
-        }
     }
 }

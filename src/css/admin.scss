@@ -6,6 +6,25 @@ body.wp-admin {
         padding-left: 0;
     }
 
+    // For the form groups
+    .framering-form-group {
+        &:not(:first-child) {
+            margin-top: 1rem;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        .framering-input {
+            margin-top: 0.5rem;
+
+            .form-control {
+                width: 100%;
+            }
+        }
+    }
+
     // For the repeater editor
     .framering-repeater {
         .items {

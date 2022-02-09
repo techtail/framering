@@ -7,6 +7,8 @@
 
 namespace Framering;
 
+use Framering\Core\Form;
+
 /**
  * Represents a component
  * Can be extended and reused
@@ -53,6 +55,13 @@ class Component {
      * @var ?string
      */
     public $name;
+
+    /**
+     * The component form instance, if any
+     *
+     * @var Form
+     */
+    protected $form;
 
     public function __construct($data = [
         /**
@@ -273,5 +282,35 @@ class Component {
         }
 
         return true;
+    }
+
+    /**
+     * Create a form instance for the component
+     *
+     * @return void
+     */
+    public function create_form() {
+        $this->form = new Form([
+            "id" => $this->name,
+            "fields" => $this->get_fields()
+        ]);
+    }
+
+    /**
+     * Checks if this component has a created form
+     *
+     * @return boolean
+     */
+    public function has_form() {
+        return !empty($this->form);
+    }
+
+    /**
+     * Retrieves the form related to this component
+     *
+     * @return Core\Form
+     */
+    public function get_form() {
+        return $this->form;
     }
 }

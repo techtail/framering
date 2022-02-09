@@ -13,29 +13,106 @@ namespace Framering;
  */
 class Component {
     /**
+     * The component ID
+     *
+     * @var string
+     */
+    public $id;
+
+    /**
      * The component title
      *
      * @var string
      */
-    protected $title;
+    public $title;
 
     /**
      * The array of fields
      *
      * @var array[]
      */
-    protected $fields = [];
+    public $fields = [];
 
     /**
-     * The rules that applies to this component
-     * Can either be an array containing simple instructions
-     * or a rule condition set containing a condition and a group of rules
+     * The ruleset that applies to this component
      *
      * @var array[]|RuleCondition[]
      */
-    protected $rules = [];
+    public $rules = [];
 
-    public function __construct($data = []) {
+    /**
+     * The component style
+     *
+     * @var object
+     */
+    public $style;
+
+    /**
+     * The component name
+     *
+     * @var ?string
+     */
+    public $name;
+
+    public function __construct($data = [
+        /**
+         * The component ID
+         * If none is given, an ID will be generated based in the component title
+         */
+        "id" => null,
+
+        /**
+         * The component name
+         * A named component will have all fields saved with the name prefix
+         * and will need this prefix to retrieve the fields, eg.: \get_field("componentname.fieldname")
+         */
+        "name" => null,
+
+        /**
+         * The component title
+         */
+        "title" => null,
+
+        /**
+         * The component description
+         */
+        "description" => null,
+
+        /**
+         * The component ruleset
+         * Can either be an associative array containing simple instructions
+         * or an array of rule condition instances.
+         * 
+         * All rules will be treated as `AND`, except for the ones
+         * inside rule condition instances.
+         */
+        "rules" => [],
+
+        /**
+         * An array containing fields to be added to the component
+         * @var Model\Field[]
+         */
+        "fields" => [],
+
+        /**
+         * The component settings
+         */
+        "settings" => [
+            /**
+             * The component style, either "metabox" or "borderless"
+             */
+            "style" => "metabox",
+
+            /**
+             * The component position
+             * Can be one of the following:
+             * - top: before the content editor
+             * - normal: after the content editor
+             * - lateral: in the post editor sidebar
+             */
+            "position" => "normal"
+        ]
+    ]) {
         if (empty($data["title"])) {
             throw new \Exception("All components must have a name.");
         }
@@ -44,8 +121,22 @@ class Component {
             throw new \Exception("All components must have at least one rule.");
         }
 
+        if (empty($data["id"])) {
+            $this->id = \sanitize_title_with_dashes($data["title"]);
+        } else {
+            $this->id = $data["id"];
+        }
+
+        if (!empty($data["name"])) {
+            $this->name = $data["name"];
+        }
+
         $this->title = $data["title"];
         $this->rules = $data["rules"];
+        $this->style = (object) $data["settings"]["style"] || [
+            "style" => "metabox",
+            "position" => "normal"
+        ];
 
         // Add all fields to the component
         if (is_array($data["fields"])) {
@@ -55,8 +146,41 @@ class Component {
         }
     }
 
-    public function add_field(array $field) {
+    /**
+     * Retrieves the component title
+     *
+     * @return string
+     */
+    public function get_title() {
+        return $this->title;
+    }
+
+    /**
+     * Retrieves the component rules
+     *
+     * @return array[]|RuleCondition[]
+     */
+    public function get_rules() {
+        return $this->rules;
+    }
+
+    /**
+     * Adds a field to the component
+     *
+     * @param array $field The field data to be added
+     * @return void
+     */
+    public function add_field($field) {
         $this->fields[] = $field;
+    }
+
+    /**
+     * Retrieves all fields registered into this component
+     *
+     * @return array
+     */
+    public function get_fields() {
+        return $this->fields;
     }
 
     /**
@@ -65,7 +189,7 @@ class Component {
      * @return boolean
      */
     public function check() {
-        foreach($this->rules as $rule) {
+        foreach($this->rules as $key => $rule) {
             $condition = "AND";
             $conditions = [];
 
@@ -74,12 +198,12 @@ class Component {
                 $condition = $rule->condition;
                 $conditions = $rule->conditions;
             } else
-            // If it's a simple AND rule array
-            if (is_array($rule)) {
+            // Check if a valid value was given
+            if (!is_array($rule) && !is_object($rule)) {
                 $condition = "AND";
-                $conditions = $rule;
+                $conditions = [$rule];
             } else {
-                throw new \Exception("Rule must be an array or a RuleCondition instance.");
+                throw new \Exception("Rule must not be an array or an object; can either be a string, boolean, number or RuleCondition instance.");
             }
 
             // Iterate over all conditions
@@ -102,8 +226,15 @@ class Component {
         return true;
     }
 
-    private function check_single($key, $check) {
-        switch($key) {
+    /**
+     * Checks a single rule
+     *
+     * @param string $property The rule property to be checked
+     * @param string|boolean|int|float $check The value to be checked agains
+     * @return boolean
+     */
+    private function check_single($property, $check) {
+        switch($property) {
             // If it's checking for homepage
             case "is_homepage":
             case "is_home":
@@ -140,5 +271,7 @@ class Component {
                 }
             break;
         }
+
+        return true;
     }
 }

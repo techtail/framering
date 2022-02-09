@@ -1,0 +1,66 @@
+$light-border-color: #dcdcde;
+$danger: #cc1818;
+
+body.wp-admin {
+    &.is-framering-headed-content #wpcontent {
+        padding-left: 0;
+    }
+
+    // For the repeater editor
+    .framering-repeater {
+        .items {
+            margin-bottom: 1rem;
+            padding: 0.25rem;
+            background-color: $light-border-color;
+
+            .repeater-item {
+                border: 1px solid $light-border-color;
+                padding: 0.25rem;
+                position: relative;
+
+                &:not(:first-child) {
+                    margin-top: 1rem;
+                }
+
+                table {
+                    margin-top: 0;
+                }
+
+                .button-delete-item {
+                    position: absolute;
+                    top: 0.25rem;
+                    right: 0.25rem;
+                    border-color: $danger;
+                    color: $danger;
+
+                    &:hover {
+                        border-color: darken($danger, 10%);
+                        color: darken($danger, 10%);
+                    }
+                }
+            }
+        }
+    }
+
+    .framering-card {
+        .header {
+            text-align: center;
+            margin: 0 0 1rem;
+            padding: 1rem;
+            background: #fff;
+            border-bottom: 1px solid $light-border-color;
+        }
+
+        .body {
+            padding: 1rem;
+            padding-top: 0;
+        }
+    }
+
+    // For the cards
+    .framering-well {
+        padding: 1rem;
+        background: #fff;
+        border: 1px solid $light-border-color;
+    }
+}

@@ -31,7 +31,7 @@ class Component {
     /**
      * The array of fields
      *
-     * @var array[]
+     * @var Field[]
      */
     public $fields = [];
 
@@ -150,7 +150,7 @@ class Component {
         // Add all fields to the component
         if (is_array($data["fields"])) {
             foreach($data["fields"] as $field) {
-                $this->add_field($field);
+                $this->add_field($field["type"], $field);
             }
         }
     }
@@ -165,6 +165,15 @@ class Component {
     }
 
     /**
+     * Retrieves the component name
+     *
+     * @return string
+     */
+    public function get_name() {
+        return $this->name;
+    }
+
+    /**
      * Retrieves the component rules
      *
      * @return array[]|RuleCondition[]
@@ -176,11 +185,16 @@ class Component {
     /**
      * Adds a field to the component
      *
-     * @param array $field The field data to be added
+     * @param string $type The type of the field to be added
+     * @param array $field The data of the field to be added
      * @return void
      */
-    public function add_field($field) {
-        $this->fields[] = $field;
+    public function add_field($type, $field) {
+        if (!isset(Core::$fields[$type])) {
+            throw new \Exception(sprintf("Field type \"%s\" was not found.", $type));
+        }
+
+        $this->fields[] = new Core::$fields[$type]($field, $this);
     }
 
     /**
@@ -290,9 +304,11 @@ class Component {
      * @return void
      */
     public function create_form() {
+        $fields = array_map(fn($field) => $field->get_editor_field(), $this->get_fields());
+
         $this->form = new Form([
             "id" => $this->name,
-            "fields" => $this->get_fields()
+            "fields" => $fields
         ]);
     }
 

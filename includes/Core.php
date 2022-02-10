@@ -36,7 +36,7 @@ final class Core {
      *
      * @var array
      */
-    private static $default_fields = ["Text"];
+    private static $default_fields = ["Text", "Textarea"];
 
     public static function Instance() {
         static $instance = null;

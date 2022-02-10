@@ -12,7 +12,7 @@ class Textarea extends Field {
 
     public function get_editor_field() {
         return array_merge(parent::get_editor_field(), [
-            "type" => "text"
+            "type" => "textarea"
         ]);
     }
 }

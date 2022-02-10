@@ -1025,7 +1025,7 @@ final class Form {
         // Check if the form has an ID and the field has a name
         if ($this->id !== null && isset($field["name"])) {
             // Add the form ID to the field
-            $new_name = "framering[" . $this->id . "][" . $field["name"];
+            $new_name = "framering[" . $field["name"];
 
             // Check if is opening any tag inside the name
             if (strpos($field["name"], "[") > -1) {
@@ -1047,7 +1047,7 @@ final class Form {
             // Check if it has an internal name
             if (!isset($field["_name"])) {
                 // Create an internal name for it
-                $field["_name"] = uniqid("of-field-");
+                $field["_name"] = uniqid("fr-field-");
             }
 
             // Get the field internal name

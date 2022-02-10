@@ -97,15 +97,9 @@ class Hooks {
                     continue;
                 }
 
-                $data = null;
-
-                if (!empty($component->id)) {
-                    $data = $_POST["framering"][$component->id];
-                } else {
-                    $data = $_POST["framering"];
-                }
-
+                $data = $_POST["framering"];
                 $parsed = $component->get_form()->process($data);
+                $parsed = $parsed[$component->get_name()];
 
                 // Check if any error ocurred
                 if (\is_wp_error($parsed)) {
@@ -116,7 +110,7 @@ class Hooks {
                 if (!empty($parsed)) {
                     $save = [];
 
-                    $prefix = FRAMERING_PREFIX;
+                    $prefix = FRAMERING_PREFIX . "field_";
 
                     if (!empty($component->id)) {
                         $prefix .= $component->id . "_";

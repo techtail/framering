@@ -170,7 +170,7 @@ class Component {
      * @return string
      */
     public function get_name() {
-        return $this->name;
+        return $this->name ?? $this->id;
     }
 
     /**
